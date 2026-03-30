@@ -553,5 +553,36 @@
             </intent-filter>
         </service>
 
+
+        <!-- ============================================================== -->
+        <!-- OACP — Open App Capability Protocol                            -->
+        <!-- ============================================================== -->
+
+        <!-- Discovery provider: serves oacp.json, OACP.md, and entity lists -->
+        <provider
+            android:name="com.best.deskclock.oacp.OacpMetadataProvider"
+            android:authorities="${applicationId}.oacp"
+            android:exported="true"
+            android:readPermission="" />
+
+        <!-- Capability receiver: handles all OACP intent actions -->
+        <receiver
+            android:name="com.best.deskclock.oacp.OacpReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="${applicationId}.ACTION_OACP_GET_ACTIVE_ALARMS" />
+                <action android:name="${applicationId}.ACTION_OACP_SET_ALARM" />
+                <action android:name="${applicationId}.ACTION_OACP_CANCEL_ALARM" />
+                <action android:name="${applicationId}.ACTION_OACP_CANCEL_ALL_ALARMS" />
+                <action android:name="${applicationId}.ACTION_OACP_START_TIMER" />
+                <action android:name="${applicationId}.ACTION_OACP_GET_ACTIVE_TIMERS" />
+                <action android:name="${applicationId}.ACTION_OACP_CANCEL_TIMER" />
+                <action android:name="${applicationId}.ACTION_OACP_START_STOPWATCH" />
+                <action android:name="${applicationId}.ACTION_OACP_STOP_STOPWATCH" />
+                <action android:name="${applicationId}.ACTION_OACP_RESET_STOPWATCH" />
+                <action android:name="${applicationId}.ACTION_OACP_LAP_STOPWATCH" />
+            </intent-filter>
+        </receiver>
+
     </application>
 </manifest>

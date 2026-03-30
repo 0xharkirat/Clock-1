@@ -1,0 +1,546 @@
+{
+  "oacpVersion": "0.3",
+  "appId": "__APPLICATION_ID__",
+  "displayName": "Clock",
+  "appDomains": ["alarms", "timers", "stopwatch", "time"],
+  "appKeywords": ["alarm", "timer", "stopwatch", "clock", "wake up", "countdown"],
+  "appAliases": ["clock app", "alarm clock", "desk clock"],
+  "entityTypes": [
+    {
+      "id": "alarm",
+      "displayName": "Alarm",
+      "description": "An enabled alarm scheduled in the Clock app."
+    },
+    {
+      "id": "timer",
+      "displayName": "Timer",
+      "description": "An active (running or paused) countdown timer."
+    }
+  ],
+  "entityProviders": [
+    {
+      "id": "alarm_list",
+      "entityType": "alarm",
+      "transport": "provider",
+      "uri": "content://__APPLICATION_ID__.oacp/entities/alarm"
+    },
+    {
+      "id": "timer_list",
+      "entityType": "timer",
+      "transport": "provider",
+      "uri": "content://__APPLICATION_ID__.oacp/entities/timer"
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "get_active_alarms",
+      "description": "List all alarms that are currently enabled. Responds with alarm times and labels, or says no alarms are on if none are enabled.",
+      "domain": "alarms",
+      "aliases": [
+        "list my alarms",
+        "show alarms",
+        "what alarms do I have",
+        "are any alarms on",
+        "check my alarms"
+      ],
+      "examples": [
+        "what alarms do I have on?",
+        "list my active alarms",
+        "are any alarms set?",
+        "show me my alarms",
+        "which alarms are enabled?"
+      ],
+      "keywords": ["alarm", "list", "show", "active", "enabled", "scheduled"],
+      "disambiguationHints": [
+        "Use this when the user wants to know which alarms are currently enabled.",
+        "Prefer set_alarm when the user wants to create a new alarm.",
+        "Prefer cancel_alarm when the user wants to turn off a specific alarm."
+      ],
+      "parameters": [],
+      "confirmation": "never",
+      "executionMessage": "Checking your alarms.",
+      "visibility": "public",
+      "completionMode": "async_result",
+      "sensitivity": "low",
+      "sideEffects": "None. Read-only.",
+      "idempotent": true,
+      "resultTransport": {
+        "android": {
+          "type": "broadcast",
+          "action": "org.oacp.ACTION_RESULT"
+        }
+      },
+      "invoke": {
+        "android": {
+          "type": "broadcast",
+          "action": "__APPLICATION_ID__.ACTION_OACP_GET_ACTIVE_ALARMS"
+        }
+      }
+    },
+    {
+      "id": "set_alarm",
+      "description": "Create and enable a new alarm at the specified hour and minute. Optionally set a label and which days of the week it repeats. If no days are specified, the alarm fires once and does not repeat.",
+      "domain": "alarms",
+      "aliases": [
+        "create alarm",
+        "add alarm",
+        "new alarm",
+        "wake me up",
+        "set an alarm for"
+      ],
+      "examples": [
+        "set an alarm for 7am",
+        "wake me up at 6:30",
+        "set an alarm for 8am every weekday",
+        "create an alarm for 9pm labeled bedtime",
+        "set a Monday morning alarm for 7:15"
+      ],
+      "keywords": ["alarm", "set", "create", "new", "wake", "schedule"],
+      "disambiguationHints": [
+        "Use this when the user wants to create a new alarm at a specific time.",
+        "Prefer cancel_alarm when the user wants to turn off an existing alarm."
+      ],
+      "parameters": [
+        {
+          "name": "hour",
+          "type": "integer",
+          "required": true,
+          "description": "Hour of the alarm in 24-hour format (0–23).",
+          "minimum": 0,
+          "maximum": 23,
+          "examples": [7, 8, 22],
+          "prompt": "What hour should the alarm be set for?"
+        },
+        {
+          "name": "minute",
+          "type": "integer",
+          "required": true,
+          "description": "Minute of the alarm (0–59).",
+          "minimum": 0,
+          "maximum": 59,
+          "examples": [0, 15, 30, 45],
+          "prompt": "What minute should the alarm be set for?"
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "required": false,
+          "description": "Optional label for the alarm, e.g. 'Work', 'Gym', 'Medication'.",
+          "examples": ["Work", "Gym", "Wake up", "Medication"]
+        },
+        {
+          "name": "days",
+          "type": "string",
+          "required": false,
+          "description": "Comma-separated day abbreviations for repeating alarms: MON, TUE, WED, THU, FRI, SAT, SUN. Omit for a one-time alarm. You may also accept 'weekdays' (MON–FRI) or 'weekends' (SAT,SUN) or 'everyday'.",
+          "examples": ["MON,TUE,WED,THU,FRI", "SAT,SUN", "MON,WED,FRI", "everyday"]
+        }
+      ],
+      "confirmation": "never",
+      "executionMessage": "Setting the alarm.",
+      "visibility": "public",
+      "completionMode": "fire_and_forget",
+      "sensitivity": "low",
+      "sideEffects": "Creates a new enabled alarm in the Clock app.",
+      "idempotent": false,
+      "invoke": {
+        "android": {
+          "type": "broadcast",
+          "action": "__APPLICATION_ID__.ACTION_OACP_SET_ALARM",
+          "extrasMapping": {
+            "hour": "__APPLICATION_ID__.EXTRA_HOUR",
+            "minute": "__APPLICATION_ID__.EXTRA_MINUTE",
+            "label": "__APPLICATION_ID__.EXTRA_LABEL",
+            "days": "__APPLICATION_ID__.EXTRA_DAYS"
+          }
+        }
+      }
+    },
+    {
+      "id": "cancel_alarm",
+      "description": "Disable a specific alarm by its ID. The alarm remains in the app but is turned off and will not fire.",
+      "domain": "alarms",
+      "aliases": [
+        "turn off alarm",
+        "disable alarm",
+        "delete alarm",
+        "remove alarm",
+        "switch off alarm"
+      ],
+      "examples": [
+        "cancel my 7am alarm",
+        "turn off the work alarm",
+        "disable my morning alarm",
+        "cancel the alarm labeled gym"
+      ],
+      "keywords": ["alarm", "cancel", "disable", "turn off", "delete", "remove"],
+      "disambiguationHints": [
+        "Use this when the user wants to disable or cancel a specific alarm.",
+        "Use cancel_all_alarms when the user wants to turn off all alarms at once.",
+        "Query the alarm entity provider to resolve which alarm the user is referring to."
+      ],
+      "parameters": [
+        {
+          "name": "alarm_id",
+          "type": "string",
+          "required": true,
+          "description": "The ID of the alarm to cancel, obtained from the alarm entity provider.",
+          "entityRef": {
+            "entityType": "alarm",
+            "resolution": "required",
+            "entityDisambiguationPrompt": "Which alarm would you like to cancel?"
+          }
+        }
+      ],
+      "confirmation": "if_destructive",
+      "confirmationMessage": "Turn off this alarm?",
+      "executionMessage": "Turning off the alarm.",
+      "visibility": "public",
+      "completionMode": "fire_and_forget",
+      "sensitivity": "low",
+      "sideEffects": "Disables the alarm. It will not fire until re-enabled.",
+      "idempotent": true,
+      "invoke": {
+        "android": {
+          "type": "broadcast",
+          "action": "__APPLICATION_ID__.ACTION_OACP_CANCEL_ALARM",
+          "extrasMapping": {
+            "alarm_id": "__APPLICATION_ID__.EXTRA_ALARM_ID"
+          }
+        }
+      }
+    },
+    {
+      "id": "cancel_all_alarms",
+      "description": "Disable all currently enabled alarms. All alarms are turned off and will not fire.",
+      "domain": "alarms",
+      "aliases": [
+        "turn off all alarms",
+        "disable all alarms",
+        "cancel all alarms",
+        "switch off all alarms"
+      ],
+      "examples": [
+        "cancel all my alarms",
+        "turn off all alarms",
+        "disable every alarm"
+      ],
+      "keywords": ["alarm", "all", "cancel", "disable", "turn off", "every"],
+      "disambiguationHints": [
+        "Use this only when the user explicitly wants to cancel ALL alarms.",
+        "Prefer cancel_alarm for targeting a single alarm."
+      ],
+      "parameters": [],
+      "confirmation": "always",
+      "confirmationMessage": "Turn off all your alarms?",
+      "executionMessage": "Turning off all alarms.",
+      "visibility": "public",
+      "completionMode": "fire_and_forget",
+      "sensitivity": "medium",
+      "sideEffects": "Disables every alarm in the app.",
+      "idempotent": true,
+      "invoke": {
+        "android": {
+          "type": "broadcast",
+          "action": "__APPLICATION_ID__.ACTION_OACP_CANCEL_ALL_ALARMS"
+        }
+      }
+    },
+    {
+      "id": "start_timer",
+      "description": "Start a new countdown timer for the specified duration in seconds. Optionally give it a label.",
+      "domain": "timers",
+      "aliases": [
+        "set a timer",
+        "create timer",
+        "countdown for",
+        "start countdown",
+        "timer for"
+      ],
+      "examples": [
+        "set a timer for 5 minutes",
+        "start a 10 minute timer",
+        "set a 90 second timer",
+        "timer for 2 minutes labeled pasta",
+        "start a 30 second timer"
+      ],
+      "keywords": ["timer", "countdown", "start", "set", "minutes", "seconds"],
+      "disambiguationHints": [
+        "Use this when the user wants a countdown timer.",
+        "Prefer start_stopwatch when the user wants to count up from zero.",
+        "Convert user-given minutes to seconds before passing duration_seconds."
+      ],
+      "parameters": [
+        {
+          "name": "duration_seconds",
+          "type": "integer",
+          "required": true,
+          "description": "Timer duration in seconds. Convert minutes to seconds (e.g. 5 minutes = 300 seconds).",
+          "minimum": 1,
+          "maximum": 86400,
+          "examples": [30, 60, 300, 600, 3600],
+          "prompt": "How long should the timer run?"
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "required": false,
+          "description": "Optional label for the timer, e.g. 'Pasta', 'Pomodoro', 'Stretch'.",
+          "examples": ["Pasta", "Tea", "Pomodoro", "Stretch"]
+        }
+      ],
+      "confirmation": "never",
+      "executionMessage": "Starting the timer.",
+      "visibility": "public",
+      "completionMode": "fire_and_forget",
+      "sensitivity": "low",
+      "sideEffects": "Creates and starts a new countdown timer.",
+      "idempotent": false,
+      "invoke": {
+        "android": {
+          "type": "broadcast",
+          "action": "__APPLICATION_ID__.ACTION_OACP_START_TIMER",
+          "extrasMapping": {
+            "duration_seconds": "__APPLICATION_ID__.EXTRA_DURATION_SECONDS",
+            "label": "__APPLICATION_ID__.EXTRA_LABEL"
+          }
+        }
+      }
+    },
+    {
+      "id": "get_active_timers",
+      "description": "List all timers that are currently running or paused, with their labels and remaining time. Responds with a spoken summary or says no timers are active.",
+      "domain": "timers",
+      "aliases": [
+        "list my timers",
+        "show timers",
+        "what timers are running",
+        "check my timers",
+        "how much time is left on my timer"
+      ],
+      "examples": [
+        "what timers do I have running?",
+        "list my active timers",
+        "how much time is left?",
+        "are any timers running?",
+        "show my timers"
+      ],
+      "keywords": ["timer", "list", "running", "active", "remaining", "countdown"],
+      "disambiguationHints": [
+        "Use this when the user wants to know the status of current timers.",
+        "Prefer start_timer when the user wants to create a new timer."
+      ],
+      "parameters": [],
+      "confirmation": "never",
+      "executionMessage": "Checking your timers.",
+      "visibility": "public",
+      "completionMode": "async_result",
+      "sensitivity": "low",
+      "sideEffects": "None. Read-only.",
+      "idempotent": true,
+      "resultTransport": {
+        "android": {
+          "type": "broadcast",
+          "action": "org.oacp.ACTION_RESULT"
+        }
+      },
+      "invoke": {
+        "android": {
+          "type": "broadcast",
+          "action": "__APPLICATION_ID__.ACTION_OACP_GET_ACTIVE_TIMERS"
+        }
+      }
+    },
+    {
+      "id": "cancel_timer",
+      "description": "Cancel and remove a specific active timer by its ID.",
+      "domain": "timers",
+      "aliases": [
+        "stop timer",
+        "delete timer",
+        "remove timer",
+        "cancel countdown"
+      ],
+      "examples": [
+        "cancel my pasta timer",
+        "stop the 5 minute timer",
+        "cancel all timers",
+        "remove the tea timer"
+      ],
+      "keywords": ["timer", "cancel", "stop", "delete", "remove"],
+      "disambiguationHints": [
+        "Use this when the user wants to cancel a specific timer.",
+        "Query the timer entity provider to resolve which timer the user means.",
+        "Use stop_stopwatch when the user is talking about the stopwatch."
+      ],
+      "parameters": [
+        {
+          "name": "timer_id",
+          "type": "string",
+          "required": true,
+          "description": "The ID of the timer to cancel, obtained from the timer entity provider.",
+          "entityRef": {
+            "entityType": "timer",
+            "resolution": "required",
+            "entityDisambiguationPrompt": "Which timer would you like to cancel?"
+          }
+        }
+      ],
+      "confirmation": "if_destructive",
+      "confirmationMessage": "Cancel this timer?",
+      "executionMessage": "Cancelling the timer.",
+      "visibility": "public",
+      "completionMode": "fire_and_forget",
+      "sensitivity": "low",
+      "sideEffects": "Removes the timer permanently.",
+      "idempotent": true,
+      "invoke": {
+        "android": {
+          "type": "broadcast",
+          "action": "__APPLICATION_ID__.ACTION_OACP_CANCEL_TIMER",
+          "extrasMapping": {
+            "timer_id": "__APPLICATION_ID__.EXTRA_TIMER_ID"
+          }
+        }
+      }
+    },
+    {
+      "id": "start_stopwatch",
+      "description": "Start or resume the stopwatch to count up from zero (or from where it was paused).",
+      "domain": "stopwatch",
+      "aliases": [
+        "start the stopwatch",
+        "begin stopwatch",
+        "resume stopwatch",
+        "start timing"
+      ],
+      "examples": [
+        "start the stopwatch",
+        "begin timing",
+        "resume the stopwatch",
+        "start counting"
+      ],
+      "keywords": ["stopwatch", "start", "begin", "resume", "count", "timing"],
+      "disambiguationHints": [
+        "Use this when the user wants to count up (stopwatch), not countdown (timer).",
+        "Prefer start_timer when the user specifies a duration."
+      ],
+      "parameters": [],
+      "confirmation": "never",
+      "executionMessage": "Starting the stopwatch.",
+      "visibility": "public",
+      "completionMode": "fire_and_forget",
+      "sensitivity": "low",
+      "sideEffects": "Starts or resumes the stopwatch.",
+      "idempotent": false,
+      "invoke": {
+        "android": {
+          "type": "broadcast",
+          "action": "__APPLICATION_ID__.ACTION_OACP_START_STOPWATCH"
+        }
+      }
+    },
+    {
+      "id": "stop_stopwatch",
+      "description": "Pause the stopwatch without resetting it.",
+      "domain": "stopwatch",
+      "aliases": [
+        "pause the stopwatch",
+        "stop timing",
+        "pause timing",
+        "halt stopwatch"
+      ],
+      "examples": [
+        "stop the stopwatch",
+        "pause the stopwatch",
+        "pause timing"
+      ],
+      "keywords": ["stopwatch", "stop", "pause", "halt"],
+      "disambiguationHints": [
+        "Use this to pause the stopwatch. Use reset_stopwatch to clear it."
+      ],
+      "parameters": [],
+      "confirmation": "never",
+      "executionMessage": "Pausing the stopwatch.",
+      "visibility": "public",
+      "completionMode": "fire_and_forget",
+      "sensitivity": "low",
+      "sideEffects": "Pauses the stopwatch. Time is preserved.",
+      "idempotent": true,
+      "invoke": {
+        "android": {
+          "type": "broadcast",
+          "action": "__APPLICATION_ID__.ACTION_OACP_STOP_STOPWATCH"
+        }
+      }
+    },
+    {
+      "id": "reset_stopwatch",
+      "description": "Reset the stopwatch back to zero and clear all recorded laps.",
+      "domain": "stopwatch",
+      "aliases": [
+        "clear the stopwatch",
+        "zero the stopwatch",
+        "restart stopwatch"
+      ],
+      "examples": [
+        "reset the stopwatch",
+        "clear the stopwatch",
+        "zero out the stopwatch"
+      ],
+      "keywords": ["stopwatch", "reset", "clear", "zero", "restart"],
+      "disambiguationHints": [
+        "Use this to reset the stopwatch to zero. Use stop_stopwatch to only pause it."
+      ],
+      "parameters": [],
+      "confirmation": "never",
+      "executionMessage": "Resetting the stopwatch.",
+      "visibility": "public",
+      "completionMode": "fire_and_forget",
+      "sensitivity": "low",
+      "sideEffects": "Clears the stopwatch time and all laps.",
+      "idempotent": true,
+      "invoke": {
+        "android": {
+          "type": "broadcast",
+          "action": "__APPLICATION_ID__.ACTION_OACP_RESET_STOPWATCH"
+        }
+      }
+    },
+    {
+      "id": "lap_stopwatch",
+      "description": "Record a lap on the running stopwatch.",
+      "domain": "stopwatch",
+      "aliases": [
+        "lap",
+        "record lap",
+        "mark lap",
+        "split time"
+      ],
+      "examples": [
+        "lap",
+        "record a lap",
+        "mark a lap on the stopwatch",
+        "split"
+      ],
+      "keywords": ["stopwatch", "lap", "split", "record", "mark"],
+      "disambiguationHints": [
+        "Use this to record a lap while the stopwatch is running."
+      ],
+      "parameters": [],
+      "confirmation": "never",
+      "executionMessage": "Lap recorded.",
+      "visibility": "public",
+      "completionMode": "fire_and_forget",
+      "sensitivity": "low",
+      "sideEffects": "Adds a lap record to the stopwatch.",
+      "idempotent": false,
+      "invoke": {
+        "android": {
+          "type": "broadcast",
+          "action": "__APPLICATION_ID__.ACTION_OACP_LAP_STOPWATCH"
+        }
+      }
+    }
+  ]
+}
